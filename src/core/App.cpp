@@ -35,6 +35,10 @@ bool App::init(int argc, char* argv[]) {
         return false;
     }
 
+    if (m_engine) {
+        m_engine->start();
+    }
+
     m_running = true;
     core::Logger::instance().info("Application initialized successfully.");
     return true;
