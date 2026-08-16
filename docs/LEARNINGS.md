@@ -43,9 +43,25 @@
 | Lecturas erráticas | CS no se mantiene bajo | Usar `transfernb` para multi-byte |
 | Heading incorrecto | Sin calibración | Ejecutar `calibrate()` antes de usar |
 | Binario no ejecuta en Pi diferente | Cross-compile sin sysroot | Configurar sysroot correctamente |
+| `x86_64-binfmt-P: Could not open '/lib64/ld-linux-x86-64.so.2'` | Binario x86_64 copiado a ARM | Hacer `make clean && make` directamente en la Pi |
+| `/bin/bash: syntax error near unexpected token '('` | Comillas dobles en `@echo` con `$(ARCH_MSG)` que contiene paréntesis | Usar `@printf 'Built: %s (%s)\n' $(TARGET) '$(ARCH_MSG)'` |
+| `git remote -v` falla en directorio de trabajo | El directorio no es un repo git | Clonar desde GitHub o inicializar git localmente |
+
+### 9. Makefile - Echo con Paréntesis
+- En Makefile, `@echo "Built: $(TARGET) ($(ARCH_MSG))"` falla si `ARCH_MSG` contiene paréntesis, porque bash interpreta los paréntesis como subshell.
+- Solución segura: usar `printf` en lugar de `echo` con comillas dobles.
+
+### 10. Despliegue desde Desktop a Raspberry Pi
+- El workflow recomendado es: editar localmente, `make USE_STUB=1`, commit, push, y luego deploy por SSH:
+  ```bash
+  ssh joy@raspberry.local "cd /home/joy/src/hmc5883l_rpi && git pull && make clean && make -j4 && sudo make run"
+  ```
+- Asegurarse de que el Makefile en la Pi tenga la versión actualizada con detección de `aarch64`/`armv7l`/`armv6l`.
 
 ## Notas para el AI
 
 - Siempre verificar que los directorios `obj/` y `bin/` existan antes de compilar.
 - Los headers de nlohmann/json.hpp son un stub; reemplazar por la librería real en producción.
 - El soporte para OLED (SSD1306) está como stub; puede expandirse según necesidad.
+- El modo stub (`USE_STUB=1`) es útil para compilar en desktop sin hardware bcm2835.
+- El binario debe compilarse siempre en la arquitectura destino; no copiar binarios entre arquitecturas diferentes.

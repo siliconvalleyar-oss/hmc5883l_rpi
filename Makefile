@@ -1,6 +1,6 @@
 # ==============================================================================
 # Makefile for Raspberry Pi HMC5883L SPI Application
-# Target: bin/App (32-bit and 64-bit compatible)
+# Target: bin/App (ARM native on Raspberry Pi)
 # ==============================================================================
 
 SHELL := /bin/bash
@@ -19,12 +19,22 @@ OPTIMIZE := -O2
 ARCH     := $(shell uname -m)
 ifeq ($(ARCH),x86_64)
     ARCH_FLAGS := -m64
+    ARCH_MSG   := x86_64
 else ifeq ($(ARCH),i686)
     ARCH_FLAGS := -m32
+    ARCH_MSG   := "x86 (32-bit)"
+else ifeq ($(ARCH),aarch64)
+    ARCH_FLAGS :=
+    ARCH_MSG   := "aarch64 (ARM 64-bit)"
 else ifeq ($(ARCH),armv7l)
-    ARCH_FLAGS := -marm -mfpu=vfp -mfloat-abi=hard
+    ARCH_FLAGS :=
+    ARCH_MSG   := "armv7l (ARM 32-bit)"
+else ifeq ($(ARCH),armv6l)
+    ARCH_FLAGS :=
+    ARCH_MSG   := "armv6l (ARM 32-bit)"
 else
     ARCH_FLAGS :=
+    ARCH_MSG   := $(ARCH)
 endif
 
 # Cross-compilation support
@@ -80,7 +90,7 @@ $(BIN_DIR):
 # Link executable
 $(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CXX) $(LDFLAGS) -o $@ $^
-	@echo "Built: $(TARGET) ($(ARCH))"
+	@printf 'Built: %s (%s)\n' $(TARGET) '$(ARCH_MSG)'
 
 # Compile source files to object files (mirroring src/ structure)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
@@ -105,11 +115,11 @@ run: all
 install:
 	@echo "Installing dependencies..."
 	sudo apt-get update
-	sudo apt-get install -y g++ make bcm2835-dev
+	sudo apt-get install -y g++ make libbcm2835-dev
 
 # Show architecture info
 arch:
-	@echo "Host architecture: $(ARCH)"
+	@echo "Host architecture: $(ARCH_MSG)"
 	@echo "Compiler: $(CXX)"
 	@echo "Flags: $(ARCH_FLAGS)"
 
