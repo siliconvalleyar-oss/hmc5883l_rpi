@@ -1,0 +1,21 @@
+# Build artifacts
+bin/
+obj/
+
+# Dependencies
+include/libraries/bcm2835_stub.hpp
+include/nlohmann/json.hpp
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
