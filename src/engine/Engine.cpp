@@ -1,11 +1,12 @@
 #include "engine/Engine.hpp"
 #include "core/Logger.hpp"
 #include <cmath>
+#include <ctime>
 
 namespace engine {
 
 Engine::Engine()
-    : m_running(false) {
+    : m_running(false), m_simulated(false), m_simulated_heading(0.0f) {
 }
 
 Engine::~Engine() {
@@ -17,9 +18,10 @@ bool Engine::init() {
 
     m_magnetometer = std::make_unique<HMC5883L>(BCM2835_SPI_CS0);
     if (!m_magnetometer->begin()) {
-        core::Logger::instance().error("Failed to initialize HMC5883L.");
-        m_status = "HMC5883L init failed";
-        return false;
+        core::Logger::instance().warn("HMC5883L not detected. Continuing in SIMULATED mode.");
+        m_simulated = true;
+        m_status = "Simulated mode";
+        return true;
     }
 
     core::Logger::instance().info("Calibrating magnetometer...");
@@ -37,14 +39,23 @@ void Engine::start() {
 
 void Engine::stop() {
     m_running = false;
-    if (m_magnetometer) {
+    if (m_magnetometer && !m_simulated) {
         m_magnetometer->end();
     }
     core::Logger::instance().info("Engine stopped.");
 }
 
 void Engine::process() {
-    if (!m_running || !m_magnetometer) {
+    if (!m_running) {
+        return;
+    }
+
+    if (m_simulated) {
+        simulateData();
+        return;
+    }
+
+    if (!m_magnetometer) {
         return;
     }
 
@@ -52,19 +63,38 @@ void Engine::process() {
         HMC5883L::MagData data = m_magnetometer->readData();
         float bx = m_magnetometer->getGaussX(data.x);
         float by = m_magnetometer->getGaussY(data.y);
-        float bz = m_magnetometer->getGaussZ(data.z);
-
-        float heading = std::atan2(by, bx) * 180.0f / 3.14159265f;
-        if (heading < 0.0f) {
-            heading += 360.0f;
-        }
-
-        m_status = "Heading: " + std::to_string(static_cast<int>(heading)) + " deg";
+        publishHeading(std::atan2(by, bx) * 180.0f / 3.14159265f);
     }
+}
+
+void Engine::simulateData() {
+    static float phase = 0.0f;
+    phase += 0.02f;
+    if (phase > 360.0f) {
+        phase -= 360.0f;
+    }
+
+    float heading = phase + (std::sin(phase * 0.1f) * 10.0f);
+    if (heading < 0.0f) {
+        heading += 360.0f;
+    }
+    if (heading >= 360.0f) {
+        heading -= 360.0f;
+    }
+
+    publishHeading(heading);
+}
+
+void Engine::publishHeading(float heading) {
+    m_status = "Heading: " + std::to_string(static_cast<int>(std::round(heading))) + " deg";
 }
 
 bool Engine::isRunning() const {
     return m_running;
+}
+
+bool Engine::isSimulated() const {
+    return m_simulated;
 }
 
 std::string Engine::getStatus() const {
