@@ -18,12 +18,18 @@ public:
     void process();
 
     bool isRunning() const;
+    bool isSimulated() const;
     std::string getStatus() const;
 
 private:
+    void simulateData();
+    void publishHeading(float heading);
+
     bool m_running;
+    bool m_simulated;
     std::unique_ptr<HMC5883L> m_magnetometer;
     std::string m_status;
+    float m_simulated_heading;
 };
 
 }
