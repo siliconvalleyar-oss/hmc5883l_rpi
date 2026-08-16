@@ -53,10 +53,8 @@ DOCS_DIR  := docs
 # Stub mode for desktop builds without bcm2835
 USE_STUB  ?= 0
 ifeq ($(USE_STUB),1)
-    CXXFLAGS += -DHAS_BCM2835=0
     LIBS     := -lpthread
 else
-    CXXFLAGS += -DHAS_BCM2835=1
     LIBS     := -lbcm2835 -lpthread
 endif
 
@@ -70,6 +68,13 @@ INCLUDES  := -I$(INC_DIR)
 # Compiler and linker flags
 CXXFLAGS  := $(WARNINGS) $(OPTIMIZE) $(ARCH_FLAGS) $(INCLUDES) -std=$(CXXSTD) -MMD -MP
 LDFLAGS   := $(ARCH_FLAGS) $(LIBS)
+
+# Add HAS_BCM2835 define based on stub mode
+ifeq ($(USE_STUB),1)
+    CXXFLAGS += -DHAS_BCM2835=0
+else
+    CXXFLAGS += -DHAS_BCM2835=1
+endif
 
 # Target executable
 TARGET    := $(BIN_DIR)/App
