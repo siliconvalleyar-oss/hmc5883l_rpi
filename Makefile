@@ -94,7 +94,7 @@ $(BIN_DIR):
 
 # Link executable
 $(TARGET): $(OBJS) | $(BIN_DIR)
-	$(CXX) $(LDFLAGS) -o $@ $^
+	$(CXX) $^ $(LDFLAGS) -o $@
 	@printf 'Built: %s (%s)\n' $(TARGET) '$(ARCH_MSG)'
 
 # Compile source files to object files (mirroring src/ structure)
