@@ -27,6 +27,7 @@ Esta aplicación demuestra el uso de la librería BCM2835 para comunicarse con e
   - SDA → MOSI (GPIO10)
   - SCL → MISO (GPIO9)
   - CS → CE0 (GPIO8)
+  - DRDY → GPIO4 (opcional, para detección de datos lista)
 
 ## Requisitos de Software
 
