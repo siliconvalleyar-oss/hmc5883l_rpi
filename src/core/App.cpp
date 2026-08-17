@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <unistd.h>
+#include <ctime>
 
 using json = nlohmann::json;
 
@@ -51,12 +52,33 @@ int App::run() {
 
     core::Logger::instance().info("Application running. Press Ctrl+C to stop.");
 
+    time_t last_print = 0;
     while (m_running && m_engine && m_engine->isRunning()) {
         m_engine->process();
+        time_t now = time(nullptr);
+        if (now != last_print) {
+            last_print = now;
+            printMeasurements();
+        }
         usleep(50000);
     }
 
     return EXIT_SUCCESS;
+}
+
+void App::printMeasurements() {
+    if (!m_engine) {
+        return;
+    }
+
+    HMC5883L::MagData data = m_engine->getMagData();
+    float heading = m_engine->getHeading();
+
+    core::Logger::instance().info("=== Measurements ===");
+    core::Logger::instance().info("X: " + std::to_string(data.x) +
+                                  "  Y: " + std::to_string(data.y) +
+                                  "  Z: " + std::to_string(data.z));
+    core::Logger::instance().info("Heading: " + std::to_string(static_cast<int>(std::round(heading))) + " deg");
 }
 
 void App::shutdown() {

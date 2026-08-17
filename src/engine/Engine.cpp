@@ -6,7 +6,10 @@
 namespace engine {
 
 Engine::Engine()
-    : m_running(false), m_simulated(false), m_simulated_heading(0.0f) {
+    : m_running(false), m_simulated(false), m_simulated_heading(0.0f), m_last_heading(0.0f) {
+    m_last_data.x = 0;
+    m_last_data.y = 0;
+    m_last_data.z = 0;
 }
 
 Engine::~Engine() {
@@ -63,7 +66,12 @@ void Engine::process() {
         HMC5883L::MagData data = m_magnetometer->readData();
         float bx = m_magnetometer->getGaussX(data.x);
         float by = m_magnetometer->getGaussY(data.y);
-        publishHeading(std::atan2(by, bx) * 180.0f / 3.14159265f);
+        m_last_data = data;
+        m_last_heading = std::atan2(by, bx) * 180.0f / 3.14159265f;
+        if (m_last_heading < 0.0f) {
+            m_last_heading += 360.0f;
+        }
+        publishHeading(m_last_heading);
     }
 }
 
@@ -82,6 +90,11 @@ void Engine::simulateData() {
         heading -= 360.0f;
     }
 
+    m_last_heading = heading;
+    m_last_data.x = static_cast<int16_t>(std::cos(heading * 3.14159265f / 180.0f) * 500);
+    m_last_data.y = static_cast<int16_t>(std::sin(heading * 3.14159265f / 180.0f) * 500);
+    m_last_data.z = 0;
+
     publishHeading(heading);
 }
 
@@ -99,6 +112,14 @@ bool Engine::isSimulated() const {
 
 std::string Engine::getStatus() const {
     return m_status;
+}
+
+HMC5883L::MagData Engine::getMagData() const {
+    return m_last_data;
+}
+
+float Engine::getHeading() const {
+    return m_last_heading;
 }
 
 }

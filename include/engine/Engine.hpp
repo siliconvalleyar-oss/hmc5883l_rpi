@@ -20,6 +20,8 @@ public:
     bool isRunning() const;
     bool isSimulated() const;
     std::string getStatus() const;
+    HMC5883L::MagData getMagData() const;
+    float getHeading() const;
 
 private:
     void simulateData();
@@ -30,6 +32,8 @@ private:
     std::unique_ptr<HMC5883L> m_magnetometer;
     std::string m_status;
     float m_simulated_heading;
+    HMC5883L::MagData m_last_data;
+    float m_last_heading;
 };
 
 }
