@@ -326,7 +326,7 @@ private:
         m_last_heading = heading;
         m_last_data.x = static_cast<int16_t>(std::cos(heading * 3.14159265f / 180.0f) * 500);
         m_last_data.y = static_cast<int16_t>(std::sin(heading * 3.14159265f / 180.0f) * 500);
-        m_last_data.z = 0;
+        m_last_data.z = static_cast<int16_t>(std::sin(heading * 0.8f) * 300);
     }
 
     void printMeasurements() const {
