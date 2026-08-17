@@ -3,6 +3,10 @@
 
 #include <cstdint>
 #include <array>
+#include <memory>
+#include <iostream>
+#include <cmath>
+#include <ctime>
 
 #ifdef HAS_BCM2835
 #include <bcm2835.h>
@@ -211,5 +215,135 @@ private:
         }
     }
 };
+
+namespace HMC5883L {
+
+class Hmc5883l_t {
+public:
+    Hmc5883l_t(uint8_t cs = BCM2835_SPI_CS0) : m_cs(cs), m_simulated(false), m_last_heading(0.0f) {
+        m_last_data.x = 0;
+        m_last_data.y = 0;
+        m_last_data.z = 0;
+    }
+
+    ~Hmc5883l_t() {
+        stop();
+    }
+
+    bool start() {
+        m_driver = std::make_unique<HMC5883L>(m_cs);
+        if (!m_driver->begin()) {
+            std::cout << "[HMC5883L] Sensor not detected. Continuing in SIMULATED mode." << std::endl;
+            m_simulated = true;
+        } else {
+            std::cout << "[HMC5883L] Sensor detected. Calibrating..." << std::endl;
+            m_driver->calibrate(100);
+            std::cout << "[HMC5883L] Calibration complete." << std::endl;
+        }
+        m_running = true;
+        return true;
+    }
+
+    void run() {
+        if (!start()) {
+            return;
+        }
+
+        std::cout << "[HMC5883L] Running. Press Ctrl+C to stop." << std::endl;
+
+        time_t last_print = 0;
+        while (m_running) {
+            process();
+            time_t now = time(nullptr);
+            if (now != last_print) {
+                last_print = now;
+                printMeasurements();
+            }
+            bcm2835_delay(50000);
+        }
+    }
+
+    void stop() {
+        if (!m_running) {
+            return;
+        }
+        m_running = false;
+        if (m_driver && !m_simulated) {
+            m_driver->end();
+        }
+        std::cout << "[HMC5883L] Stopped." << std::endl;
+    }
+
+    HMC5883L::MagData getMagData() const {
+        return m_last_data;
+    }
+
+    float getHeading() const {
+        return m_last_heading;
+    }
+
+    bool isSimulated() const {
+        return m_simulated;
+    }
+
+private:
+    void process() {
+        if (m_simulated) {
+            simulateData();
+            return;
+        }
+
+        if (!m_driver || !m_driver->isDataReady()) {
+            return;
+        }
+
+        HMC5883L::MagData data = m_driver->readData();
+        float bx = m_driver->getGaussX(data.x);
+        float by = m_driver->getGaussY(data.y);
+        m_last_data = data;
+        m_last_heading = std::atan2(by, bx) * 180.0f / 3.14159265f;
+        if (m_last_heading < 0.0f) {
+            m_last_heading += 360.0f;
+        }
+    }
+
+    void simulateData() {
+        static float phase = 0.0f;
+        phase += 0.02f;
+        if (phase > 360.0f) {
+            phase -= 360.0f;
+        }
+
+        float heading = phase + (std::sin(phase * 0.1f) * 10.0f);
+        if (heading < 0.0f) {
+            heading += 360.0f;
+        }
+        if (heading >= 360.0f) {
+            heading -= 360.0f;
+        }
+
+        m_last_heading = heading;
+        m_last_data.x = static_cast<int16_t>(std::cos(heading * 3.14159265f / 180.0f) * 500);
+        m_last_data.y = static_cast<int16_t>(std::sin(heading * 3.14159265f / 180.0f) * 500);
+        m_last_data.z = 0;
+    }
+
+    void printMeasurements() const {
+        std::cout << "=== Measurements ===" << std::endl;
+        std::cout << "X: " << m_last_data.x
+                  << "  Y: " << m_last_data.y
+                  << "  Z: " << m_last_data.z << std::endl;
+        std::cout << "Heading: " << static_cast<int>(std::round(m_last_heading)) << " deg" << std::endl;
+    }
+
+    uint8_t m_cs;
+    bool m_running;
+    bool m_simulated;
+    std::unique_ptr<HMC5883L> m_driver;
+    HMC5883L::MagData m_last_data;
+    float m_last_heading;
+};
+
+}
 
 #endif

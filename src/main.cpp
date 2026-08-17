@@ -1,29 +1,7 @@
-#include "core/App.hpp"
-#include "core/Logger.hpp"
-#include <iostream>
-#include <cstdlib>
-#include <csignal>
+#include "drivers/HMC5883L.hpp"
 
-static core::App* g_app = nullptr;
-
-static void signalHandler(int signal) {
-    if (g_app) {
-        g_app->shutdown();
-    }
-    std::exit(EXIT_SUCCESS);
-}
-
-int main(int argc, char* argv[]) {
-    std::signal(SIGINT, signalHandler);
-    std::signal(SIGTERM, signalHandler);
-
-    core::App app;
-    g_app = &app;
-
-    if (!app.init(argc, argv)) {
-        std::cerr << "Failed to initialize application." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    return app.run();
+int main() {
+    auto device = std::make_unique<HMC5883L::Hmc5883l_t>();
+    device->run();
+    return 0;
 }
