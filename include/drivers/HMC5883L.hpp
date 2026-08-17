@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <ctime>
+#include <unistd.h>
 
 #ifdef HAS_BCM2835
 #include <bcm2835.h>
@@ -259,7 +260,7 @@ public:
                 last_print = now;
                 printMeasurements();
             }
-            bcm2835_delay(50000);
+            usleep(50000);
         }
     }
 
