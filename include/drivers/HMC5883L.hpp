@@ -216,7 +216,7 @@ private:
     }
 };
 
-namespace HMC5883L {
+namespace app {
 
 class Hmc5883l_t {
 public:
