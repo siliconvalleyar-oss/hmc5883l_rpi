@@ -16,10 +16,10 @@ void SSD1306_OLED::clear() {
 void SSD1306_OLED::display() {
 }
 
-void SSD1306_OLED::setCursor(uint8_t x, uint8_t y) {
+void SSD1306_OLED::setCursor([[maybe_unused]] uint8_t x, [[maybe_unused]] uint8_t y) {
 }
 
-void SSD1306_OLED::drawPixel(uint8_t x, uint8_t y, bool color) {
+void SSD1306_OLED::drawPixel([[maybe_unused]] uint8_t x, [[maybe_unused]] uint8_t y, [[maybe_unused]] bool color) {
 }
 
 uint8_t SSD1306_OLED::getWidth() const {

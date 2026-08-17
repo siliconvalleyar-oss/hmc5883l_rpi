@@ -18,7 +18,7 @@ App::~App() {
     shutdown();
 }
 
-bool App::init(int argc, char* argv[]) {
+bool App::init([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     core::Logger::instance().info("Initializing application...");
 
     if (!loadConfig()) {

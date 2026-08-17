@@ -12,7 +12,7 @@ STRIP    ?= strip
 
 # Compiler flags
 CXXSTD   := c++17
-WARNINGS := -Wall -Wextra -Wpedantic -Wshadow -Wformat=2
+WARNINGS := -Wall -Wextra -Wpedantic -Wshadow -Wformat=2 -Wno-psabi
 OPTIMIZE := -O2
 
 # Architecture detection
