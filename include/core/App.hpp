@@ -21,6 +21,7 @@ private:
     bool loadConfig();
     bool initHardware();
     bool initEngine();
+    void printMeasurements();
 
     std::string m_configPath;
     std::string m_hardwareConfigPath;
